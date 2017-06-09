@@ -1,10 +1,22 @@
 // 控制应用生命周期的模块
 // 创建本地浏览器窗口的模块
+// var process = require('child_process');
+// //直接调用命令
+//  (function (){process.exec('cd client; npm run build',
+// 	  function (error, stdout, stderr) {
+// 		if (error !== null) {
+// 		  console.log('exec error: ' + error);
+// 		}
+// 	});
+// })()
+
+
+
 const electron = require('electron');
 const { app, BrowserWindow } = require('electron');
 const express = require('express');
 var server = express()
-server.use(express.static('src'))
+server.use(express.static('view'))
 server.get('/', function (req, res) {
   res.send('hello')
 });
