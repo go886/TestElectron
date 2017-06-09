@@ -1,0 +1,23 @@
+{
+  "name": "testelectron",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron .",
+    "prebuild": "cp -a ./client/dist ./src",
+    "build": "electron-packager . TestElectron --out=dist --overwrite --ignore=node_modules/electron-* --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=client --icon=icon.icns",
+    "postbuild2": "asar pack dist/TestElectron-darwin-x64/TestElectron.app/Contents/Resources/app dist/TestElectron-darwin-x64/TestElectron.app/Contents/Resources/app.asar && rm -rf dist/TestElectron-darwin-x64/TestElectron.app/Contents/Resources/app"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "asar": "^0.13.0",
+    "electron": "^1.6.10",
+    "electron-packager": "^8.7.1"
+  },
+  "dependencies": {
+    "express": "^4.15.3"
+  }
+}
