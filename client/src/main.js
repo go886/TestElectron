@@ -6,6 +6,19 @@ import router from './router'
 
 Vue.config.productionTip = false
 
+
+import { DataSource, PageMgr } from './assets/js/api'
+
+Vue.use({
+    install (Vue, options) {
+        //添加实例方法
+        Vue.prototype.$api = {
+          'page' : PageMgr,
+          'source' : DataSource,
+        }
+    }
+});
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

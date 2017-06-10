@@ -13,7 +13,10 @@
                 "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"
             },
             "program": "${workspaceRoot}/main.js",
-            "protocol": "legacy"
+            "protocol": "legacy",
+            "env": {
+                 "NODE_ENV": "development"
+            }
         }
     ]
 }

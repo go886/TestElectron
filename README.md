@@ -69,13 +69,19 @@ npm install  --save-dev electron-packager
                 "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"
             },
             "program": "${workspaceRoot}/main.js",
-            "protocol": "legacy"
-        },
+            "protocol": "legacy",
+            "env": {
+                 "NODE_ENV": "development"
+            }
+        }
     ]
 }
 ```
-- client 代码
+
+# 开发调试
 ```
 cd client
-npm run build
+npm run start
+
+vccode 运行 F5
 ```
