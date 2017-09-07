@@ -1,22 +1,15 @@
 const electron = require('electron');
 const { app, BrowserWindow } = require('electron');
-const express = require('express');
-var server = express()
+const server = require('./server/server').server
+const {setting} = require('./server/setting')
+const menu = require('./menu')
 
-if (process.env.NODE_ENV === 'development') {
-  server.use(express.static('client/dist'))
-} else {
-  server.use(express.static(__dirname + '/view'))
-}
-server.listen('3000', function () {
-  console.log('Example app listening on port 3000!');
-});
-
+app.setAboutPanelOptions({ applicationVersion: setting.version, version: setting.version })
 // 指向窗口对象的一个全局引用，如果没有这个引用，那么当该javascript对象被垃圾回收的
 // 时候该窗口将会自动关闭
 let win;
-
 function createWindow() {
+  menu.createAppMenu();
   // 创建一个新的浏览器窗口
   var electronScreen = electron.screen
   var size = electronScreen.getPrimaryDisplay().workAreaSize
@@ -38,7 +31,12 @@ function createWindow() {
 
   // 并且装载应用的index.html页面
   // win.loadURL(`file://${__dirname}/index.html`);
-  win.loadURL('http://localhost:3000')
+  // win.loadURL('http://localhost:8080/')
+
+  //webpack url
+  var url  = (process.env.NODE_ENV === 'development') ? 'http://localhost:8080/' : server.URL
+  win.loadURL(url)
+  win.focus();
 
   // 打开开发工具页面
   // win.webContents.openDevTools();
@@ -58,9 +56,9 @@ app.on('ready', createWindow);
 // 当所有的窗口被关闭后退出应用
 app.on('window-all-closed', () => {
   // 对于OS X系统，应用和相应的菜单栏会一直激活直到用户通过Cmd + Q显式退出
-  if (process.platform !== 'darwin') {
+  // if (process.platform !== 'darwin') {
     app.quit();
-  }
+  // }
 });
 
 app.on('activate', () => {
@@ -70,3 +68,6 @@ app.on('activate', () => {
     createWindow();
   }
 });
+
+
+// require('./TNodeService/main')

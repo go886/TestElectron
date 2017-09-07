@@ -1,5 +1,9 @@
 import Vue from 'vue'
 import VueResource from 'vue-resource'
+const ipcRenderer = require('electron').ipcRenderer;
+
+// import {ipcRenderer} from 'electron'
+// const path = require('path');
 
 
 //创建XMLHttpRequest对象       
