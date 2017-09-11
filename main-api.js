@@ -1,9 +1,11 @@
 const electron = require('electron');
 const window = require('electron').BrowserWindow;
-const { app, Menu, MenuItem, dialog } = require('electron')
+const { app, Menu, MenuItem, dialog, BrowserWindow, shell } = require('electron')
 
 const ipcMain = require('electron').ipcMain
-const path = require('path');
+const fs = require('fs')
+const path = require('path')
+const md5 = require('md5')
 
 const low = require('lowdb')
 const FileSync = require('lowdb/adapters/FileSync')
@@ -24,22 +26,30 @@ ipcMain.on('init', (event, arg) => {
     var args = { type: 'info', msg: '服务运行中' }
     sender.send('log', JSON.stringify(args))
 });
-var items = []
-for (var i = 0; i < 100; ++i) {
-    items.push({
-        type: '0',
-        name: 'test',
-        icon: 'http://gxiami.alicdn.com/images/appv5/common/19235/5993f6f3351ce_p3uH_1502869235.jpg@336w_75q',
-        path: '',
-        exec: 'file:///Applications/虾米音乐.app'
-    })
-};
 
-function copyFile(source, dest) {
-    var fs = require('fs');
-    fs.createReadStream(source).pipe(fs.createWriteStream(dest));
+function copyFile(source, target, cb) {
+    var cbCalled = false;
+
+    var rd = fs.createReadStream(source);
+    rd.on("error", function (err) {
+        done(err);
+    });
+    var wr = fs.createWriteStream(target);
+    wr.on("error", function (err) {
+        done(err);
+    });
+    wr.on("close", function (ex) {
+        done();
+    });
+    rd.pipe(wr);
+
+    function done(err) {
+        if (!cbCalled) {
+            cb(err);
+            cbCalled = true;
+        }
+    }
 }
-
 
 module.exports = {
     sendMessage(args) {
@@ -51,6 +61,13 @@ module.exports = {
             msg = JSON.stringify({ type: 'info', msg: msg })
             sender.send('tips', msg)
         }
+    },
+    sendIpcMsg(msgType, args) {
+        function isString(v) {
+            return v && (typeof v === "string");
+        }
+        var msg = isString(args) ? args : JSON.stringify(args);
+        sender.send(msgType, msg)
     },
     rebuild() {
         Object.keys(dsl.maping).forEach(function (k, i) {
@@ -109,6 +126,9 @@ module.exports = {
     },
     items() {
         var items = db.get('items').value() || [];
+        items.forEach((item) => {
+            item.icon = setting.serverurl + "/" + item.id + '.png?t=' + (new Date()).getTime();
+        })
         return items;
     },
     openItem(item) {
@@ -121,8 +141,9 @@ module.exports = {
             if (fileinfo.ext == '.app') {
                 db.get('items').push({
                     type: '0',
+                    id: md5(p),
                     name: fileinfo.name,
-                    icon: "http://127.0.0.1:8081/1.png",
+                    // icon: "http://127.0.0.1:8081/1.png",
                     path: p,
                     exec: 'file://' + p
                 }).write();
@@ -138,10 +159,15 @@ module.exports = {
         }, {
             label: "浏览目录",
             click: () => {
-                const { shell } = require('electron')
                 var fileinfo = path.parse(item.path)
-                // shell.openExternal('file://' + fileinfo.dir);
-
+                shell.openExternal('file://' + fileinfo.dir);
+            },
+        }, {
+            label: "设置",
+            click: () => {
+                this.sendIpcMsg('onSettingItem', item);
+                // this.openSetting(item);
+                return;
                 var paths = dialog.showOpenDialog(window.getFocusedWindow(), {
                     defaultPath: item.path,
                     properties: ['openFile'],
@@ -149,13 +175,22 @@ module.exports = {
                 }, (paths) => {
                     if (paths) {
                         var iconpath = paths[0];
-                        var dest = path.join(electron.app.getPath('userData'), 'images/1.png')
-                        copyFile(iconpath, dest);
-                        item.icon = "1.png"
+                        var dest = path.join(electron.app.getPath('userData'), 'images')
+                        dest = path.join(dest, item.id + '.png')
+                        copyFile(iconpath, dest, (err) => {
+                            if (!err) {
+                                sender.send('refresh', null);
+                            }
+                        });
                     }
                 });
+            }
+        }, {
+            label: "test",
+            click: () => {
+                shell.openExternal('file://' + electron.app.getPath('userData'));
 
-            },
+            }
         }
         ];
 

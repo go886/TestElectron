@@ -28,7 +28,7 @@ function createWindow() {
     // maxHeight:580,
     // center: false,
     // skipTaskbar:true,
-    // backgroundColor: '#ff0045',
+    // backgroundColor: '#FFFFFF00',
     titleBarStyle: 'hidden',
     // transparent: true,
     // frame: false,

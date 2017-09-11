@@ -5,6 +5,10 @@ import App from './App'
 import router from './router'
 import VueQriously from 'vue-qriously'  
 
+import ElementUI from 'element-ui'
+import 'element-ui/lib/theme-default/index.css'
+
+Vue.use(ElementUI)
 Vue.use(VueQriously);
 Vue.use({
   install(Vue, options) {

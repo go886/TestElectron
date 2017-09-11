@@ -20,8 +20,8 @@
                 <span class="glyphicon glyphicon-certificate icon"></span>
                 <span class='itemtext'>设置</span>
             </div>
-        </div>
-
+        </div>  
+        <Setting :value="settingitem"/>      
         <div class='content' id='content' ref="content"  @dragover='ondragover' @dragleave='ondragleave' @drop='ondrop'>
             <!-- <div class='qr' id='qr' :style="{visibility:isrunning ? 'visible': 'hidden'}">
                 <div id='qrcode' style="background:white;" @click="onqrcode">
@@ -53,8 +53,12 @@
 </template>
 
 <script>
+    import Setting from './components/Setting'
     export default {
         name: 'app',
+        components:{
+            Setting,
+        },
         data() {
             return {
                 mock: true,
@@ -67,7 +71,8 @@
                 tips: null,
                 projectName: 'Drop File Here',
                 type: 'native',
-                items: []
+                items: [],
+                settingitem: null,
             }
         },
         computed: {
@@ -109,6 +114,13 @@
             this.$.ipc.on('newProject', (event, arg) => {
                 arg = JSON.parse(arg);
                 this.onProjectFinished(arg);
+            });
+            this.$.ipc.on('refresh', (event, args)=>{
+                alert('refresh');
+                this.refresh();
+            });
+            this.$.ipc.on('onSettingItem', (event, args)=>{
+                this.settingitem = JSON.parse(args);
             });
             this.$.ipc.send('init');
         },
