@@ -1,5 +1,10 @@
 const electron = require('electron');
 const { app, BrowserWindow } = require('electron');
+var appName = app.getName();
+app.setName(appName);
+app.setPath('userData', app.getPath('userData').replace(/Electron/i, appName));
+
+
 const server = require('./server/server').server
 const {setting} = require('./server/setting')
 const menu = require('./menu')
@@ -68,6 +73,9 @@ app.on('activate', () => {
     createWindow();
   }
 });
+
+
+
 
 
 // require('./TNodeService/main')

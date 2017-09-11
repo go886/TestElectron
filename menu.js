@@ -1,6 +1,24 @@
-const { app, dialog, shell, Menu, MenuItem } = require('electron')
+const { app, dialog, shell, Menu, MenuItem, Tray, nativeImage } = require('electron')
 const api = require('./main-api.js')
 const { setting } = require('./server/setting')
+let tray = null
+
+function installTray() {    
+    let trayIcon = nativeImage.createFromPath('./iconTemplate.png');
+    tray = new Tray(trayIcon)
+    tray.on('click', function(){
+        // tray.window.hide();
+    });
+    if (process.platform  == 'win32') {
+        const contextMenu = Menu.buildFromTemplate([
+            {label: '退出', click: function(){
+              app.quit();
+            }},
+          ])
+          tray.setToolTip('TCoder...')
+          tray.setContextMenu(contextMenu)
+    }
+}
 
 function createAppMenu() {
     function openFile(filename) {
@@ -89,6 +107,9 @@ function createAppMenu() {
 
     const menu = Menu.buildFromTemplate(template)
     Menu.setApplicationMenu(menu)
+    installTray();
+
+    
 }
 
 

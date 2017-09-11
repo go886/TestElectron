@@ -22,13 +22,20 @@
             </div>
         </div>
 
-        <div class='content' id='drop' @dragover='ondragover' @dragleave='ondragleave' @drop='ondrop'>
-            <div class='qr' id='qr' :style="{visibility:isrunning ? 'visible': 'hidden'}">
+        <div class='content' id='content' ref="content"  @dragover='ondragover' @dragleave='ondragleave' @drop='ondrop'>
+            <!-- <div class='qr' id='qr' :style="{visibility:isrunning ? 'visible': 'hidden'}">
                 <div id='qrcode' style="background:white;" @click="onqrcode">
                     <qriously :value="qrcode" :size="245" />
                 </div>
+            </div> -->
+            <div class="item" v-for="item in items">
+                <img class="itemicon" id="itemicon" :src="item.icon" @click="onitemclick(item)" @contextmenu="oncontextmenu(item)">
+                </img>
+                <div class="itemtitle">{{item.name}}</div>
+                <div class="itemmask" />
+
             </div>
-            <div class='dropproject' id='dropproject' ref='dropproject'>
+            <div v-if="items.length == 0" class='dropproject' id='dropproject' ref='dropproject'>
                 <span class="droptip" id='projectname'>{{projectName}}</span>
             </div>
         </div>
@@ -41,6 +48,7 @@
             <div class='wanring' id='tips' :style="{visibility:tips ? 'visible': 'hidden'}">{{tips}}</div>
             <textarea class='log' ref='log' :style="{visibility:openlog ? 'visible': 'hidden'}" disabled="disabled">{{log}}</textarea>
         </div>
+        <!-- {{items}} -->
     </div>
 </template>
 
@@ -59,6 +67,7 @@
                 tips: null,
                 projectName: 'Drop File Here',
                 type: 'native',
+                items: []
             }
         },
         computed: {
@@ -75,25 +84,30 @@
             }
         },
         created() {
+            document.ondragstart = function(e) {
+                e.preventDefault();
+                return false;
+            }
             document.ondragover = document.ondrop = function (e) {
                 e.preventDefault();
                 return false;
             };
 
             this.qrschema = this.$.remoteApi.setting().qrschema;
+            this.items = this.$.remoteApi.items();
 
             var setting = this.$.remoteApi.setting()
-            this.$.ipc.on('tips',  (event, arg) => {
+            this.$.ipc.on('tips', (event, arg) => {
                 arg = JSON.parse(arg);
                 this.showTips(arg.type, arg.msg);
             });
 
-            this.$.ipc.on('log', (event, arg)=> {
+            this.$.ipc.on('log', (event, arg) => {
                 arg = JSON.parse(arg);
                 this.appendLog(arg.type, arg.msg);
             });
-            this.$.ipc.on('newProject', (event, arg)=>{
-                arg =JSON.parse(arg);
+            this.$.ipc.on('newProject', (event, arg) => {
+                arg = JSON.parse(arg);
                 this.onProjectFinished(arg);
             });
             this.$.ipc.send('init');
@@ -125,17 +139,27 @@
                 this.$.remoteApi.openqrcode();
             },
             ondragover() {
-                this.$refs.dropproject.className = 'hover'
+                this.$refs.content.className = 'hover'
                 console.log()
             },
             ondragleave() {
-                this.$refs.dropproject.className = ''
+                this.$refs.content.className = ''
+            },
+            refresh() {
+                this.items = this.$.remoteApi.items();
             },
             ondrop(e) {
                 this.ondragleave();
                 e.preventDefault();
 
-                const file = e.dataTransfer.files[0];
+                let paths = [];
+                const files = e.dataTransfer.files;
+                for (var i = 0; i < files.length; ++i) {
+                    paths.push(files[i].path)
+                }
+                this.$.remoteApi.addItems(paths);
+                this.refresh();
+                return false;
                 function isAcceptFile(file) {
                     return file.lastIndexOf('.html') == file.length - '.html'.length
                 }
@@ -151,14 +175,20 @@
             },
             showTips(type, msg) {
                 this.tips = msg;
-                setTimeout(()=>{
-                    this.tips =null;
+                setTimeout(() => {
+                    this.tips = null;
                 }, 3000);
                 this.appendLog(type, msg)
             },
             appendLog(type, msg) {
                 const info = '[ ' + type + ' ]  ' + msg + '\n';
                 this.log += info;
+            },
+            onitemclick(item) {
+                this.$.remoteApi.openItem(item);
+            },
+            oncontextmenu(item) {
+                this.$.remoteApi.oncontextmenu(item);
             }
         }
     }
@@ -241,7 +271,7 @@
         font-size: 12px;
         margin-left: 5px;
         text-align: center;
-        cursor: default;
+        cursor: default;        
     }
 
     .qr {
@@ -256,14 +286,25 @@
         cursor: pointer;
     }
 
-    .content {
+    #content {
         flex: 1;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: wrap;
         /*align-items: center;*/
         /*justify-content: center;*/
-        padding: 30px 20px 50px 20px;
+        padding: 30px 0px 0px 20px;
         /*background-color: white;*/
+        overflow-y: auto;
+        align-items: flex-start;
+        align-content: flex-start;
+
+
+        /* background-color: red; */
+    }
+
+    #content.hover {
+        background-color: grey;
     }
 
     #dropproject {
@@ -385,4 +426,52 @@
         color: #8a6d3b;
         font-size: 14px;
     }
+
+    .itemcontainer {
+        background-color: red;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .item {
+        width: 100px;
+        margin-bottom: 20px;
+        /* margin-right: 20px; */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        /* background-color: blue; */
+        /* flex: 0; */
+        -webkit-user-select: none;
+    }
+
+    #itemicon {
+        width: 68px;
+        height: 68px;
+        flex: 0;
+        /* max-height: 68px; */
+        border-radius: 10px;
+        border: 1px solid rgba(0, 0, 0, .05);
+
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 1px 2px rgba(0, 0, 0, .05);
+        /* background-color: gray; */
+        -webkit-transition: 0.3s;
+        transition-timing-function: ease-out;
+    }
+
+    #itemicon:hover {
+        -webkit-transform: scale(1.1);
+        cursor: pointer;
+    }
+
+    
+
+    .itemtitle {
+        text-align: center;
+        margin-top: 6px;
+    }
+
+    .itemmask {}
 </style>
