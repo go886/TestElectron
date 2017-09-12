@@ -10,7 +10,6 @@ selenium-debug.log
 
 client/.DS_Store
 client/node_modules/
-client/build/
 client/npm-debug.log*
 client/yarn-debug.log*
 client/yarn-error.log*
